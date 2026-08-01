@@ -42,24 +42,24 @@ async def health():
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-	payload = {
-		"model": settings.ollama_model,
-		"prompt": req.message,
-		"stream": False,
-	}
+    payload = {
+        "model": settings.ollama_model,
+        "messages": [{"role": "user", "content": req.message}],
+        "stream": False,
+    }
 
 	async with httpx.AsyncClient(
 		base_url=settings.ollama_base_url,
 		timeout=3000
 	) as client:
 		try:
-			resp = await client.post("/api/generate", json=payload)
+			resp = await client.post("/api/chat", json=payload)
 			resp.raise_for_status()
 			data = resp.json()
 		except httpx.HTTPError as e:
 			raise HTTPException(status_code=502, detail=f"Erro ao chamar Ollama: {e}")
 
-	return ChatResponse(
-		reply=data.get("response", ""),
-		model=data.get("model", settings.ollama_model),
-	)
+    return ChatResponse(
+        reply=data.get("message", {}).get("content", ""),
+        model=data.get("model", settings.ollama_model),
+    )
