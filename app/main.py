@@ -56,8 +56,13 @@ async def chat(req: ChatRequest):
             resp = await client.post("/api/chat", json=payload)
             resp.raise_for_status()
             data = resp.json()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"Erro ao chamar Ollama: {e}")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(
+                status_code=502,
+                detail=f"Erro do Ollama ({e.response.status_code}): {e.response.text}",
+            )
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=502, detail=f"Erro ao conectar ao Ollama: {e}")
 
     return ChatResponse(
         reply=data.get("message", {}).get("content", ""),
