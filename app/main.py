@@ -11,34 +11,34 @@ from database import engine, Base
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-	async with engine.begin() as conn:
-		await conn.run_sync(Base.metadata.create_all)
-	yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 
 app = FastAPI(
-	title="Hermes AI",
-	version="0.1.0",
-	lifespan=lifespan,
+    title="Hermes AI",
+    version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
-	CORSMiddleware,
-	allow_origins=["*"],
-	allow_methods=["*"],
-	allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class ChatRequest(BaseModel):
-	message: str
+    message: str
 
 class ChatResponse(BaseModel):
-	reply: str
-	model: str
+    reply: str
+    model: str
 
 @app.get("/health")
 async def health():
-	return {"status": "ok", "service": "hermes"}
+    return {"status": "ok", "service": "hermes"}
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
@@ -48,16 +48,16 @@ async def chat(req: ChatRequest):
         "stream": False,
     }
 
-	async with httpx.AsyncClient(
-		base_url=settings.ollama_base_url,
-		timeout=3000
-	) as client:
-		try:
-			resp = await client.post("/api/chat", json=payload)
-			resp.raise_for_status()
-			data = resp.json()
-		except httpx.HTTPError as e:
-			raise HTTPException(status_code=502, detail=f"Erro ao chamar Ollama: {e}")
+    async with httpx.AsyncClient(
+        base_url=settings.ollama_base_url,
+        timeout=3000
+    ) as client:
+        try:
+            resp = await client.post("/api/chat", json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"Erro ao chamar Ollama: {e}")
 
     return ChatResponse(
         reply=data.get("message", {}).get("content", ""),
