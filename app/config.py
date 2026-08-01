@@ -1,10 +1,14 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from config import settings
 
-engine = create_async_engine(settings.database_url. echo=settings.api_debug)
-AsyncSession = async.sessionmaker(engine, expire_on_commit=False)
+class Settings(BaseSettings):
+	model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-class Base(DeclarativeBase):
-	pass
+	database_url: str
+	ollama_base_url: str
+	ollama_model: str
+	api_secret: str | None = None
+	api_debug: bool = False
+
+
+settings = Settings()

@@ -1,5 +1,5 @@
-from contextlib import asynccontextManager
-from typing import AsyncIcerator
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -12,7 +12,7 @@ from database import engine, Base
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 	async with engine.begin() as conn:
-		await conn.run_sync(Base.metadada.create_all)
+		await conn.run_sync(Base.metadata.create_all)
 	yield
 
 
@@ -41,7 +41,7 @@ async def health():
 	return {"status": "ok", "service": "hermes"}
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(req, ChatRequest):
+async def chat(req: ChatRequest):
 	payload = {
 		"model": settings.ollama_model,
 		"prompt": req.message,
@@ -51,34 +51,15 @@ async def chat(req, ChatRequest):
 	async with httpx.AsyncClient(
 		base_url=settings.ollama_base_url,
 		timeout=3000
-	) as client
+	) as client:
 		try:
 			resp = await client.post("/api/generate", json=payload)
 			resp.raise_for_status()
 			data = resp.json()
 		except httpx.HTTPError as e:
-			raise HTTPExcepetion(status_code=502, detail=f"Erro ao chamar Ollama: {e}")
+			raise HTTPException(status_code=502, detail=f"Erro ao chamar Ollama: {e}")
 
 	return ChatResponse(
 		reply=data.get("response", ""),
 		model=data.get("model", settings.ollama_model),
-
-
 	)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
