@@ -7,6 +7,8 @@ class Settings(BaseSettings):
 	database_url: str
 	ollama_base_url: str
 	ollama_model: str
+	ollama_num_thread: int = 2
+	ollama_num_ctx: int = 2048
 	api_secret: str | None = None
 	api_debug: bool = False
 

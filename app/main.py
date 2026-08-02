@@ -46,6 +46,10 @@ async def chat(req: ChatRequest):
         "model": settings.ollama_model,
         "messages": [{"role": "user", "content": req.message}],
         "stream": False,
+        "options": {
+            "num_thread": settings.ollama_num_thread,
+            "num_ctx": settings.ollama_num_ctx,
+        },
     }
 
     async with httpx.AsyncClient(
